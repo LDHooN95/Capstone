@@ -1,0 +1,407 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+
+>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>세종대학교 강의실 배정 시스템</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/js/materialize/css/materialize.min.css}" media="screen,projection" />
+    <!-- Bootstrap Styles-->
+    <link th:href="@{/css/bootstrap.css}" rel="stylesheet" />
+    <!-- FontAwesome Styles-->
+    <link th:href="@{/css/font-awesome.css}" rel="stylesheet" />
+    <!-- Morris Chart Styles-->
+    <link th:href="@{/js/morris/morris-0.4.3.min.css}" rel="stylesheet" />
+    <!-- dataTables -->
+    <link th:href="@{/js/dataTables/dataTables.bootstrap.css}" rel="stylesheet" />
+    <!-- Custom Styles-->
+    <link th:href="@{/css/custom-styles.css}" rel="stylesheet" />
+    <!-- Google Fonts-->
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
+    <link rel="stylesheet" th:href="@{/js/Lightweight-Chart/cssCharts.css}">
+    <style>
+        #modifyLayer, #insertLayer, #insertLayer2 {display:none;}
+    </style>
+</head>
+<body>
+
+<div id="wrapper">
+    <!-- NAVI TOP : 위쪽 메뉴바 -->
+    <nav class="navbar navbar-default top-navbar" role="navigation">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand waves-effect waves-dark" href="./index" valign="top"><!--<img th:src="@{/images/sejong_trans_logo.png}" width="25" height="25" alt="">-->SEJONG APPLY</a>
+
+            <div id="sideNav" href=""><i class="material-icons dp48">toc</i></div>
+        </div>
+
+        <ul class="nav navbar-top-links navbar-right">
+            <li><a class="dropdown-button waves-effect waves-dark" href="#!" data-activates="dropdown1"><i class="fa fa-user fa-fw"></i> <b><span sec:authentication="name"></span></b> <i class="material-icons right">arrow_drop_down</i></a></li>
+        </ul>
+
+
+
+
+        <!-- 메뉴에 붙어있는 Dropdown Structure. 로그인시에만 떠야겠죠. -->
+        <ul id="dropdown1" class="dropdown-content">
+            <li><a th:href="@{/logout}"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+            </li>
+        </ul>
+
+    </nav>
+    <!--/. NAV TOP  -->
+
+
+    <!-- NAV SIDE : 왼쪽 메뉴 부분 -->
+    <nav class="navbar-default navbar-side" role="navigation">
+        <div class="sidebar-collapse">
+            <ul class="nav" id="main-menu">
+
+                <li>
+                    <a href="./index" class="waves-effect waves-dark"><i class="fa fa-dashboard"></i> 대시보드</a>
+                </li>
+                <li>
+                    <a href="#" class="waves-effect waves-dark"><i class="fa fa-sitemap"></i> 강의실 배정 <span class="fa arrow"></span></a>
+                    <ul class="nav nav-second-level">
+                        <li>
+                            <a href="./request" class="waves-effect waves-dark">강의실 배정 신청</a>
+                        </li>
+                        <li>
+                            <a href="./basket" class="waves-effect waves-dark">신청 내역 조회</a>
+                        </li>
+
+                    </ul>
+                </li>
+
+                <li sec:authorize="hasAnyRole('ROLE_WORKER','ROLE_ADMIN')">
+                    <a href="#" class="waves-effect waves-dark"><i class="fa fa-sitemap"></i> 정보 관리 <span class="fa arrow"></span></a>
+                    <ul class="nav nav-second-level">
+                        <li sec:authorize="hasRole('ROLE_ADMIN')">
+                            <a href="./building" class="waves-effect waves-dark">건물 정보 관리</a>
+                        </li>
+                        <li sec:authorize="hasAnyRole('ROLE_WORKER','ROLE_ADMIN')">
+                            <a href="./lecturer" class="waves-effect waves-dark">교수 정보 관리</a>
+                        </li>
+                        <li sec:authorize="hasAnyRole('ROLE_WORKER','ROLE_ADMIN')">
+                            <a href="./lectureinfo" class="waves-effect waves-dark">강의 정보 관리</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a href="./result" class="active-menu waves-effect waves-dark"><i class="fa fa-bar-chart-o"></i> 배정 결과 조회 </a>
+                </li>
+
+                <li sec:authorize="hasRole('ROLE_ADMIN')">
+                    <!-- <a href="./arrange" class="waves-effect waves-dark"><i class="fa fa-qrcode"></i> 강의실 배정 </a> -->
+                </li>
+
+            </ul>
+
+        </div>
+
+    </nav>
+    <!-- /. NAV SIDE 끝 -->
+
+
+    <!-- PAGE WRAPPER : NAV 제외한 페이지 -->
+    <div id="page-wrapper" >
+        <!-- page Header : 페이지 머릿글 -->
+        <div class="header">
+            <!-- 페이지 제목 -->
+            <h1 class="page-header">
+                배정 결과 조회
+            </h1>
+            <!-- breadcrumb -->
+            <ol class="breadcrumb">
+                <li><a href="./index">대시보드</a></li>
+
+                <li class="active">배정 결과 조회</li>
+            </ol>
+            <!-- 관리자용 기능 버튼 -->
+            <div class="row right-align" style="margin-right: 3em">
+                <!-- <a id ="insertButton1" class="waves-effect waves-light btn">관리자용 수정기능</a> -->
+                <!-- <a id ="insertButton2" class="waves-effect waves-light btn">관리자용 이의수신함</a> -->
+            </div>
+            <!--  -->
+        </div>
+        <!-- PAGE INNER : 페이지 본문 -->
+        <div id="page-inner">
+
+            <!-- 첫번째 행 : lecturer 리스트 출력 -->
+            <div class="row">
+                <!-- -->
+                <div class="col-md-12">
+                    <!-- Advanced Tables -->
+                    <div class="card">
+                        <div class="card-action">강의 목록</div>
+
+                   <!--     <mark style="margin-left: 3em">강의를 클릭하면 이의 신청할 수 있음.</mark> -->
+
+                        <div class="card-content">
+                            <div class="table-responsive">
+                                <table class="table table-striped" id="dataTables-example">
+                                    <thead>
+                                    <!-- List Title part -->
+                                    <tr>
+                                        <!-- a.name, a.lecture, a.lecturebuilding, a.lectureroom, a.start, a.end -->
+                                        <th>순번</th>
+                                        <th>개설학과</th>
+                                        <th>과목명</th>
+                                        <th>교수</th>
+                                        <th>학점</th>
+                                        <th>강의실</th>
+                                        <th>시간</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!--End Advanced Tables -->
+                </div>
+            </div>
+
+            <!-- /. ROW -->
+
+            <!-- 두번째 행 : 수정 요청 담당 행 -->
+
+            <!-- /. ROW  -->
+            <!-- 세번째 행 : 관리자용 이의 조회 행 -->
+
+            <!-- /. ROW  -->
+            <!-- 네번째 행 : 관리자용 강의 정보 수정/삭제 행 -->
+            <div id="insertLayer" class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-action">
+                            관리자용 강의 정보 수정/삭제
+                        </div>
+                        <div class="card-content">
+                            <form class="col s12">
+                                <input id="usercode" type="hidden" class="validate">
+                                <div class="row">
+                                    <div class="input-field col s6">
+                                        <input id="name" type="text" class="validate">
+                                        <label for="name">교수명</label>
+                                    </div>
+                                    <div class="input-field col s6">
+                                        <input id="lecture" type="text" class="validate">
+                                        <label for="lecture">강의명</label>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="input-field col s6">
+                                        <input id="lecturebuilding" type="text" class="validate">
+                                        <label for="lecturebuilding">강의건물</label>
+                                    </div>
+                                    <div class="input-field col s6">
+                                        <input id="lectureroom" type="text" class="validate" min="1950" max="2100">
+                                        <label for="lectureroom">강의실</label>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="input-field col s6">
+                                        <input id="start" type="text" class="validate">
+                                        <label for="start">시작시간</label>
+                                    </div>
+                                    <div class="input-field col s6">
+                                        <input id="end" type="text" class="validate" min="1950" max="2100">
+                                        <label for="end">종료시간</label>
+                                    </div>
+                                </div>
+
+                            </form>
+                            <div class="row right-align">
+                                <a id ="insertButton" class="waves-effect waves-yellow btn">수정</a>
+                                <a id ="deleteButton" class="waves-effect waves-red btn">삭제</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /. ROW  -->
+
+            <!-- footer에는 깨알같은 저작권 비스무리한 내용 출력하자 -->
+            <footer><p> COPYRIGHTⓒ 2019 by SEJONG UNIVERSITY CAPSTONE DESIGN TEAM 7. ALL RIGHTS RESERVED.</p></footer>
+        </div>
+        <!-- /. PAGE INNER 끝  -->
+    </div>
+    <!-- /. PAGE WRAPPER 끝 -->
+
+
+
+</div>
+<!-- /. WRAPPER 끝  -->
+<!-- JS Scripts PART -->
+<!-- jQuery Js -->
+<script th:src="@{/js/jquery-1.10.2.js}"></script>
+<!-- Bootstrap Js -->
+<script th:src="@{/js/bootstrap.min.js}"></script>
+
+<script th:src="@{/js/materialize/js/materialize.min.js}"></script>
+
+
+<!-- Custom Js -->
+<script th:src="@{/js/custom-scripts.js}"></script>
+
+<!-- Metis Menu Js -->
+<script th:src="@{/js/jquery.metisMenu.js}"></script>
+<!-- Morris Chart Js -->
+<script th:src="@{/js/morris/raphael-2.1.0.min.js}"></script>
+<script th:src="@{/js/morris/morris.js}"></script>
+
+
+<script th:src="@{/js/easypiechart.js}"></script>
+<script th:src="@{/js/easypiechart-data.js}"></script>
+
+<script th:src="@{/js/Lightweight-Chart/jquery.chart.js}"></script>
+<!-- DATA TABLE SCRIPTS : 매우 간단하게 Table UI 작업해줌 -->
+<script th:src="@{/js/dataTables/jquery.dataTables.js}"></script>
+<script th:src="@{/js/dataTables/dataTables.bootstrap.js}"></script>
+
+<script type="text/javascript">
+
+    $.ajax({
+        type: 'GET',
+        url: '/api/results',
+        success: function (data) {
+            $('#dataTables-example').dataTable({
+                info: false,
+                data: data,
+                columns: [
+
+                    {data: "no"},
+                    {data: "major"},
+                    {data: "lecture"},
+                    {data: "lecturer"},
+                    {data: "credit"},
+                    {data: "classroom"},
+                    {data: "time"}
+                ]
+                /*
+                columnDefs: [
+                    {
+                        "targets": [ 0 ],
+                        "visible": false,
+                        "searchable": false
+                    }](*/
+                //buttons: ['print', 'excel']
+            });
+
+
+        }
+    });
+
+
+
+</script>
+<script>
+    $(document).on("click", "#insertButton1", function(){
+
+        $("#modifyLayer").css("display", "none");
+        $("#insertLayer").css("display", "block");
+        $("#insertLayer2").css("display", "none");
+        $("#majorname_insert").focus();
+    });
+
+    $(document).on("click", "tr", function(){
+        $("#insertLayer").css("display", "none");
+        $("#modifyLayer").css("display", "block");
+
+        var tr = $(this);
+        var td = tr.children();
+        $('input#usercode').val(td.eq(0).text());
+        $( 'input#majorname' ).val(td.eq(1).text());
+        $( 'input#name' ).val(td.eq(2).text());
+        $( 'input#email' ).val(td.eq(3).text());
+        $( 'input#phone' ).val(td.eq(4).text());
+        $( 'input#atime' ).val(td.eq(5).text());
+
+    });
+</script>
+<script>
+    $(document).on("click", "#insertButton2", function(){
+
+        $("#modifyLayer").css("display", "none");
+        $("#insertLayer").css("display", "none");
+        $("#insertLayer2").css("display", "block");
+        $("#majorname_insert").focus();
+    });
+
+    $(document).on("click", "tr", function(){
+        $("#insertLayer2").css("display", "none");
+        $("#modifyLayer").css("display", "block");
+
+        var tr = $(this);
+        var td = tr.children();
+        $('input#usercode').val(td.eq(0).text());
+        $( 'input#majorname' ).val(td.eq(1).text());
+        $( 'input#name' ).val(td.eq(2).text());
+        $( 'input#email' ).val(td.eq(3).text());
+        $( 'input#phone' ).val(td.eq(4).text());
+        $( 'input#atime' ).val(td.eq(5).text());
+
+    });
+</script>
+<script>
+    $(document).on("click", "#insertButton", function () {
+
+        $.ajax({
+            url: "/api/lecturers",
+            type: "POST",
+            data: JSON.stringify({
+                majorname: $('#majorname_insert').val(),
+                name: $('#name_insert').val(),
+                email: $('#email_insert').val(),
+                number: $('#phone_insert').val(),
+                atime: $('#atime_insert').val()
+            }),
+            contentType: "application/json",
+            success: function () {
+                alert('수정이 완료되었습니다.');
+                location.href = '/chart';
+            },
+            error: function () {
+                alert('데이터 저장 중 에러가 발생했습니다. 다시 시도해 주세요.');
+            }
+        });
+    });
+</script>
+
+<script>
+    $('#deleteButton').click(function(){
+        $.ajax({
+            url: "/api/lecturers/"+ $("#usercode").val(),
+            type: "DELETE",
+            success: function(){
+                alert("삭제 완료되었습니다.");
+                location.href="/chart"
+            },
+            error: function () {
+                alert("삭제 중 에러가 발생했습니다. 다시 시도 해주세요.")
+            }
+
+        });
+
+    });
+
+
+</script>
+
+</body>
+
+</html>

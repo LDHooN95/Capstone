@@ -1,0 +1,12 @@
+spring:
+ mvc:
+  view:
+   prefix: /templates/
+   suffix: .html
+ datasource:
+  url: jdbc:mysql://sc7.iptime.org/dbtest?useSSL=false
+  username: root
+  password: qd@gW89rf!
+  driver-class-name: com.mysql.jdbc.Driver
+server:
+  port: 8081

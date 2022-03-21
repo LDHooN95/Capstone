@@ -1,0 +1,370 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+
+>
+<head>
+
+
+	<meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta id="_csrf" name="_csrf" th:content="${_csrf.token}"/>
+	<!-- default header name is X-CSRF-TOKEN -->
+	<meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>세종대학교 강의실 배정 시스템</title>
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+	<link rel="stylesheet" th:href="@{/js/materialize/css/materialize.min.css}" media="screen,projection" />
+    <!-- Bootstrap Styles-->
+    <link th:href="@{/css/bootstrap.css}" rel="stylesheet" />
+    <!-- FontAwesome Styles-->
+    <link th:href="@{/css/font-awesome.css}" rel="stylesheet" />
+    <!-- Morris Chart Styles-->
+    <link th:href="@{/js/morris/morris-0.4.3.min.css}" rel="stylesheet" />
+    <!-- Custom Styles-->
+    <link th:href="@{/css/custom-styles.css}" rel="stylesheet" />
+    <!-- Google Fonts-->
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
+    <link rel="stylesheet" th:href="@{/js/Lightweight-Chart/cssCharts.css}">
+</head>
+
+<body>
+    <div id="wrapper">
+
+		<!-- NAVI TOP : 위쪽 메뉴바 -->
+		<nav class="navbar navbar-default top-navbar" role="navigation">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-collapse">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand waves-effect waves-dark" href="./index" valign="top"><!--<img th:src="@{/images/sejong_trans_logo.png}" width="25" height="25" alt="">-->SEJONG APPLY</a>
+
+				<div id="sideNav" href=""><i class="material-icons dp48">toc</i></div>
+			</div>
+
+			<ul class="nav navbar-top-links navbar-right">
+				<li><a class="dropdown-button waves-effect waves-dark" href="#!" data-activates="dropdown1"><i class="fa fa-user fa-fw"></i> <b><span sec:authentication="name"></span></b> <i class="material-icons right">arrow_drop_down</i></a></li>
+			</ul>
+
+
+
+
+			<!-- 메뉴에 붙어있는 Dropdown Structure. 로그인시에만 떠야겠죠. -->
+			<ul id="dropdown1" class="dropdown-content">
+				<li><a th:href="@{/logout}"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+				</li>
+			</ul>
+
+		</nav>
+		<!--/. NAV TOP  -->
+
+
+		<!-- NAV SIDE : 왼쪽 메뉴 부분 -->
+		<nav class="navbar-default navbar-side" role="navigation">
+			<div class="sidebar-collapse">
+				<ul class="nav" id="main-menu">
+
+					<li>
+						<a href="./index" class="active-menu waves-effect waves-dark"><i class="fa fa-dashboard"></i> 대시보드</a>
+					</li>
+					<li>
+						<a href="#" class="waves-effect waves-dark"><i class="fa fa-sitemap"></i> 강의실 배정 <span class="fa arrow"></span></a>
+						<ul class="nav nav-second-level">
+							<li>
+								<a href="./request" class="waves-effect waves-dark">강의실 배정 신청</a>
+							</li>
+							<li>
+								<a href="./basket" class="waves-effect waves-dark">신청 내역 조회</a>
+							</li>
+
+						</ul>
+					</li>
+
+					<li sec:authorize="hasAnyRole('ROLE_WORKER','ROLE_ADMIN')">
+						<a href="#" class="waves-effect waves-dark"><i class="fa fa-sitemap"></i> 정보 관리 <span class="fa arrow"></span></a>
+						<ul class="nav nav-second-level">
+							<li sec:authorize="hasRole('ROLE_ADMIN')">
+								<a href="./building" class="waves-effect waves-dark">건물 정보 관리</a>
+							</li>
+							<li sec:authorize="hasAnyRole('ROLE_WORKER','ROLE_ADMIN')">
+								<a href="./lecturer" class="waves-effect waves-dark">교수 정보 관리</a>
+							</li>
+							<li sec:authorize="hasAnyRole('ROLE_WORKER','ROLE_ADMIN')">
+								<a href="./lectureinfo" class="waves-effect waves-dark">강의 정보 관리</a>
+							</li>
+						</ul>
+					</li>
+
+					<li>
+						<a href="./result" class="waves-effect waves-dark"><i class="fa fa-bar-chart-o"></i> 배정 결과 조회 </a>
+					</li>
+
+					<li sec:authorize="hasRole('ROLE_ADMIN')">
+						<!-- <a href="./arrange" class="waves-effect waves-dark"><i class="fa fa-qrcode"></i> 강의실 배정 </a> -->
+					</li>
+
+
+
+				</ul>
+
+			</div>
+
+		</nav>
+		<!-- /. NAV SIDE 끝 -->
+
+		<div sec:authorize="hasAnyRole('ROLE_USER', 'ROLE_WORKER')" id="page-wrapper">
+		</div>
+
+
+
+		<div sec:authorize="hasRole('ROLE_ADMIN')" id="page-wrapper">
+		  <div class="header"> 
+                        <h1 class="page-header">
+                            대시보드
+                        </h1>
+						<ol class="breadcrumb">
+					  <li class="active">대시보드</li>
+					</ol> 
+									
+		</div>
+            <div id="page-inner">
+
+			<div class="dashboard-cards"> 
+                <div class="row">
+                    <div class="col-xs-12 col-sm-6 col-md-3">
+					
+						<div class="card horizontal cardIcon waves-effect waves-dark">
+						<div class="card-image red">
+							<i class="material-icons dp48">supervisor_account</i>
+						</div>
+						<div class="card-stacked red">
+						<div class="card-content">
+						<strong id="fail">0</strong> 건
+						</div>
+						<div class="card-action">
+						<strong>배정 실패</strong>
+						</div>
+						</div>
+						</div>
+	 
+                    </div>
+                    <div class="col-xs-12 col-sm-6 col-md-3">
+					
+						<div class="card horizontal cardIcon waves-effect waves-dark">
+						<div class="card-image orange">
+							<i class="material-icons dp48">supervisor_account</i>
+						</div>
+						<div class="card-stacked orange">
+						<div class="card-content">
+						<strong id = wait>0</strong> 건
+						</div>
+						<div class="card-action">
+						<strong>배정 대기</strong>
+						</div>
+						</div>
+						</div> 
+					</div>
+                    <div class="col-xs-12 col-sm-6 col-md-3">
+					
+					<div class="card horizontal cardIcon waves-effect waves-dark">
+						<div class="card-image green">
+						<i class="material-icons dp48">supervisor_account</i>
+						</div>
+						<div class="card-stacked green">
+						<div class="card-content">
+						<strong id="complete">0</strong> 건
+						</div>
+						<div class="card-action">
+						<strong>배정 완료</strong>
+						</div>
+						</div>
+						</div> 
+						 
+                    </div>
+                </div>
+			   </div>
+				<!-- /. ROW  --> 
+				<div class="row">
+					<div class="col-xs-12 col-sm-12 col-md-7"> 
+					<div class="cirStats">
+						  	<div class="row">
+
+								<div class="col-xs-12 col-sm-6 col-md-6"> 
+										<div class="card-panel text-center">
+											<h4>제출 학과 비율</h4>
+											<div class="easypiechart" id="easypiechart-red" data-percent="46" ><span class="percent">46%</span>
+											</div>
+										</div>
+								</div>
+
+								<div class="col-xs-12 col-sm-6 col-md-6">
+									<div class="card-panel text-center">
+										<h4>강의실 배정 비율</h4>
+										<div class="easypiechart" id="easypiechart-blue" data-percent="99" ><span id ='blue' class="percent">99%</span>
+										</div>
+									</div>
+								</div>
+								<div  class="col-xs-12 col-sm-6 col-md-6">
+									<div class="card-panel text-center">
+										<h4>강의실 배정하기</h4>
+											<a id ="insertButton" class="waves-effect waves-light btn">자동 배정</a>
+											<a id ="resetButton" class="waves-effect waves-light btn">배정 초기화</a>
+										</div>
+									</div>
+								</div>
+
+
+							</div>
+
+						</div>							
+						</div><!--/.row-->
+
+					</div>
+
+				<input type="hidden" id="waithidden">
+				<input type="hidden" id="completehidden">
+				<input type="hidden" id="failhidden">
+
+				<footer><p> COPYRIGHTⓒ 2019 by SEJONG UNIVERSITY CAPSTONE DESIGN TEAM 7. ALL RIGHTS RESERVED.</p></footer>
+            </div>
+            <!-- /. PAGE INNER  -->
+        </div>
+        <!-- /. PAGE WRAPPER  -->
+    </div>
+    <!-- /. WRAPPER  -->
+    <!-- JS Scripts-->
+    <!-- jQuery Js -->
+    <script th:src="@{/js/jquery-1.10.2.js}"></script>
+	
+	<!-- Bootstrap Js -->
+    <script th:src="@{/js/bootstrap.min.js}"></script>
+	
+	<script th:src="@{/js/materialize/js/materialize.min.js}"></script>
+	
+    <!-- Metis Menu Js -->
+    <script th:src="@{/js/jquery.metisMenu.js}"></script>
+    <!-- Morris Chart Js -->
+    <script th:src="@{/js/morris/raphael-2.1.0.min.js}"></script>
+
+
+	<script th:src="@{/js/jquery.blockUI.js}"></script>
+	<script th:src="@{/js/easypiechart.js}"></script>
+	<script th:src="@{/js/easypiechart-data.js}"></script>
+	
+	 <script th:src="@{/js/Lightweight-Chart/jquery.chart.js}"></script>
+	
+    <!-- Custom Js -->
+    <script th:src="@{/js/custom-scripts.js}"></script>
+
+	<script type="text/javascript">
+
+		$.ajax({
+			type: 'GET',
+			url: '/api/stat/wait',
+			success: function (data) {
+			$('#wait').text(data);
+			$('#waithidden').val(data);
+
+
+			}
+		});
+
+		$.ajax({
+			type: 'GET',
+			url: '/api/stat/fail',
+			success: function (data) {
+			$('#fail').text(data);
+				$('#failhidden').val(data);
+
+
+			}
+		});
+
+
+		$.ajax({
+			type: 'GET',
+			url: '/api/stat/complete',
+			success: function (data) {
+			$('#complete').text(data);
+				$('#completehidden').val(data);
+
+
+
+			}
+		});
+		$.ajax({
+			type: 'GET',
+			url: '/api/stat/complete',
+			success: function (data) {
+				var total = Number($('#completehidden').val()) + Number($('#failhidden').val()) + Number($('#waithidden').val());
+				var value = Math.round((Number($('#completehidden').val()) / total * 100));
+
+				$('#easypiechart-blue').attr('data-percent', value);
+				$('#blue').text(value+"%");
+
+
+			}
+		});
+	</script>
+
+	<script>
+		$(document).on("click", "#insertButton", function () {
+
+			$.ajax({
+				url: "/api/arrange",
+				type: "GET",
+
+				beforeSend : function(xhr)
+				{   /*데이터를 전송하기 전에 헤더에 csrf값을 설정한다*/
+					//xhr.setRequestHeader(header, token);
+					$.blockUI({
+						message:'<h4> 잠시만 기다려주세요. </h4>'
+					});
+				},
+				success: function () {
+					alert('배정완료 되었습니다.');
+					location.href = '/index';
+				},
+
+			});
+		});
+
+		$(document).on("click","#resetButton",function(){
+			var token = $("meta[name='_csrf']").attr("content");
+			var header = $("meta[name='_csrf_header']").attr("content");
+
+
+			$.ajax({
+				url: "/api/arrange/reset",
+				type: "PUT",
+				dataType: 'json',
+				contentType: 'application/json; charset=utf-8',
+				beforeSend : function(xhr)
+				{   /*데이터를 전송하기 전에 헤더에 csrf값을 설정한다*/
+					xhr.setRequestHeader(header, token);
+					$.blockUI({
+						message:'<h4> 잠시만 기다려주세요. </h4>'
+					});
+				},
+				success: function(){
+					alert("배정 이전의 상태로 전환되었습니다.");
+					location.href="/index"
+				},
+				error: function () {
+					alert("에러가 발생했습니다. 다시 시도해주세요.")
+				}
+
+			});
+
+		});
+
+	</script>
+
+</body>
+
+</html>

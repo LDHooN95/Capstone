@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sejong.project.capstone.mapper.ArrangeMapper">
+    <!--
+    // SQL로 불러와야하는 것 정리
+    // 강의신청 내역,
+    //  몇년도 임용인지, 이수구분 두 칼럼 그룹화한 내용 출력하는 SQL문
+    //
+    // 해당 과목 status에 '배정완료' 업데이트 하는 SQL문
+
+    // 강의 배정 테이블에 추가하는 SQL문
+    <
+
+    void insertQueryToArrangeTable();
+    -->
+    <select id="getStatus" parameterType="com.sejong.project.capstone.domain.RequestInfo" resultType="string">
+        select status from request_1 where id = #{id}
+    </select>
+    <!-- 테스트 데이터가 없어서 임시로 만든 그룹 SQL.   -->
+    <select id="getRequestInfoByLectureGroup" parameterType="com.sejong.project.capstone.domain.RequestGroup" resultType="com.sejong.project.capstone.domain.RequestInfo">
+        select a.* from request_1 a, lecturer b, lecture_1 c where  a.lecturercode = b.id and a.lecturecode = c.id and b.atime = #{atime} and c.course = #{course} and status = '배정대기'
+    </select>
+
+    <!-- 중복되는 리스트 찾기. 중복되는 값 존재 -->
+    <select id="getOverlapInfoList" parameterType="com.sejong.project.capstone.domain.RequestInfo" resultType="com.sejong.project.capstone.domain.RequestInfo">
+        <![CDATA[
+    SELECT * FROM request_1
+    where ${columnName1} = #{classroom} and ${columnName3} > TIME(#{startTime}) and ${columnName2} < TIME(#{endTime}) and status = '배정대기'
+    ]]>
+        <if test="week != null">
+      <foreach collection="week" item="item">
+        <![CDATA[ and ${columnName4} like CONCAT('%',#{item},'%')  ]]>
+      </foreach>
+        </if>
+
+    </select>
+    <!-- 해당교수님의 시간대에 이미 배정완료된 과목이 있는지 체크. 값이 1이상이면 이미 배정된과목 존재 -->
+    <select id="countArrangeCompleteByLecturer" parameterType="com.sejong.project.capstone.domain.RequestInfo" resultType="int">
+
+        <![CDATA[
+    SELECT count(*) FROM request_1
+    where lecturercode = #{lecturercode} and ${columnName3} > TIME('${startTime}') and ${columnName2} < TIME('${endTime}') and status = '배정완료'
+          ]]>
+        <if test="week != null">
+        <foreach collection="week" item="item">
+        <![CDATA[  and ${columnName4} like CONCAT('%',#{item},'%')  ]]>
+        </foreach>
+        </if>
+
+    </select>
+    <!-- 해당 강의실의 시간대에 이미 배정완료된 과목이 있는지 체크 값이 1이상이면 이미 배정된 과목 존재 -->
+    <select id="countArrangeCompleteByClassroom" parameterType="com.sejong.project.capstone.domain.RequestInfo" resultType="int">
+        <![CDATA[
+    SELECT count(*) FROM request_1
+    where ${columnName1} = #{classroom} and ${columnName3} > TIME('${startTime}') and ${columnName2} < TIME('${endTime}') and status = '배정완료'
+ ]]>
+        <if test="week != null">
+            <foreach collection="week" item="item">
+            <![CDATA[  and ${columnName4} like CONCAT('%',#{item},'%') ]]>
+        </foreach>
+        </if>
+
+    </select>
+
+<!-- 찾을 그룹. 나중에 course 별로 정렬해야함.-->
+    <select id="getGroupInfo" resultType="com.sejong.project.capstone.domain.RequestGroup">
+    select distinct a.atime, b.course from lecturer a, lecture_1 b
+    order by course desc, atime
+    </select>
+
+    <!-- 배정신청 내역을 불러온다.-->
+    <select id="loadRequestTable" parameterType="int" resultType="hashmap">
+    SELECT * FROM (select request_table from info where id = #{tableId})
+
+    </select>
+
+    <!-- 배정신청에 있는 과목의 신청자의 임용년도, 이수구분을 출력한다.-->
+    <select id="printPriority" parameterType="string" resultType="hashmap">
+    SELECT a.atime, c.course FROM lecturer a, #{tableName} b, lecture_1 c
+    where a.id = b.lecturercode and b.lecturecode = c.id
+    </select>
+
+
+    <update id="updateRequestStatus" parameterType="com.sejong.project.capstone.domain.RequestInfo">
+        UPDATE request_1 SET status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 과목코드로 해당 과목의 학점을 불러오는 코드 -->
+    <select id="getCreditByLectureCode" parameterType="string" resultType="string">
+        select credit from lecture_1
+        where id = #{id}
+    </select>
+
+    <!-- 과목코드로 과목명 불러오는 코드 -->
+    <select id="getLectureNameByLectureCode" parameterType="string" resultType="string">
+        select lecturename from lecture_1
+        where id = #{id}
+    </select>
+
+    <!--유저코드로 교수명 불러오는 코드 -->
+    <select id="getLecturerNameByLecturerCode" parameterType="string" resultType="string">
+        select name from lecturer
+        where id = #{id}
+    </select>
+    <!-- -->
+    <select id="getMajorNameByLectureCode" parameterType="string" resultType="string">
+        select majorname from major a, lecture_1 b
+        where b.id = #{id} and  b.majorcode = a.id
+    </select>
+    <select id="getClassroomNameByClassCode" parameterType="string" resultType="string">
+        select classroom from classroom
+        where id = #{id}
+    </select>
+    <select id="getListAll" resultType="hashmap" >
+        SELECT a.id, b.lecturename, c.name, a.status, d.classroom as class1 , a.week1, a.starttime1, a.endtime1,  d.classroom as class1 , a.week1, a.starttime1, a.endtime1, e.classroom as class2 , a.week2, a.starttime2, a.endtime2, f.classroom as class3 , a.week3, a.starttime3, a.endtime3
+FROM dbtest.request_1 a, lecture_1 b, lecturer c, classroom d, classroom e, classroom f
+where a.lecturecode = b.id and a.lecturercode = c.id and a.class1 = d.id and a.class2 = e.id and a.class3 = f.id
+    </select>
+
+
+    <!-- parameters="int p1; string p2"-->
+
+    <insert id="insertResultTable" parameterType="com.sejong.project.capstone.domain.ResultInfo">
+          INSERT INTO result_1  values( NULL, #{major}, #{lecture}, #{lecturer}, #{credit}, #{classroom}, #{time})
+    </insert>
+
+    <select id="getBuildingInfoById" parameterType="int" resultType="hashmap">
+    SELECT * from classroom where buildingcode = #{buildingCode}
+    </select>
+
+
+    <select id="getLecturerInfoByUid" parameterType="string" resultType="hashmap">
+    SELECT * from lecturer where uid = #{uid}
+    </select>
+
+
+    <select id="getListById" parameterType="string" resultType="hashmap">
+        SELECT a.id, b.lecturename, c.name, a.status, d.classroom as class1 , a.week1, a.starttime1, a.endtime1,  d.classroom as class1 , a.week1, a.starttime1, a.endtime1, e.classroom as class2 , a.week2, a.starttime2, a.endtime2, f.classroom as class3 , a.week3, a.starttime3, a.endtime3
+FROM dbtest.request_1 a, lecture_1 b, lecturer c, classroom d, classroom e, classroom f
+where a.lecturecode = b.id and a.lecturercode = c.id and a.class1 = d.id and a.class2 = e.id and a.class3 = f.id and c.uid = #{id}
+    </select>
+
+    <select id="getListByMajorCode" parameterType="string" resultType="hashmap">
+        SELECT a.id, b.lecturename, c.name, a.status, d.classroom as class1 , a.week1, a.starttime1, a.endtime1,  d.classroom as class1 , a.week1, a.starttime1, a.endtime1, e.classroom as class2 , a.week2, a.starttime2, a.endtime2, f.classroom as class3 , a.week3, a.starttime3, a.endtime3
+FROM dbtest.request_1 a, lecture_1 b, lecturer c, classroom d, classroom e, classroom f
+where a.lecturecode = b.id and a.lecturercode = c.id and a.class1 = d.id and a.class2 = e.id and a.class3 = f.id and b.majorcode = #{code}
+    </select>
+
+
+
+    <select id="getRequestTableLastId"  resultType="int">
+    select id from request_1 order by id desc limit 1
+    </select>
+
+    <insert id="insertRequest" parameterType="hashmap" >
+        INSERT INTO request_1 values(#{id}, #{lecturecode}, #{lecturercode}, #{status}, #{seq}, #{class1}, #{week1}, #{starttime1}, #{endtime1}, #{class2}, #{week2}, #{starttime2}, #{endtime2},#{class3}, #{week3}, #{starttime3}, #{endtime3})
+        <!-- auto-increment 사용시 _id 제거 -->
+    </insert>
+
+    <update id="rollbackWaitStatus">
+        update request_1 SET status = '배정대기'
+    </update>
+    <delete id="truncateResultTable">
+        truncate table result_1;
+    </delete>
+
+</mapper>

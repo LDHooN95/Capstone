@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+<head>
+	<title>회원가입</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--===============================================================================================-->	
+	<link rel="icon" type="image/png" href="/images/icons/favicon.ico"/>
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/vendor/bootstrap/css/bootstrap.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+<!--===============================================================================================-->
+	<!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> -->
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/fonts/Linearicons-Free-v1.0.0/icon-font.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/vendor/animate/animate.css">
+<!--===============================================================================================-->	
+	<link rel="stylesheet" type="text/css" href="/vendor/css-hamburgers/hamburgers.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/vendor/animsition/css/animsition.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/vendor/select2/select2.min.css">
+<!--===============================================================================================-->	
+	<link rel="stylesheet" type="text/css" href="/vendor/daterangepicker/daterangepicker.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/css/util.css">
+	<link rel="stylesheet" type="text/css" href="/css/main.css">
+<!--===============================================================================================-->
+</head>
+<body>
+	
+	<div class="limiter">
+		<div class="container-login100" style="background-image: url('images/1.jpeg');">
+			<div class="wrap-login100 p-t-30 p-b-50">
+
+					<div class="col-lg-4">
+						<!--
+						<span class="label label-danger" th:if="#{#fields.hasErrors('username')}" th:errors="*{username}">User Name Error</span>
+						<span class="label label-danger" th:if="#{#fields.hasErrors('passwordConfirm')}" th:errors="*{passwordConfirm}">passwordConfirm Error</span>-->
+					</div>
+
+				<span class="login100-form-title p-b-41">
+					Join Membership
+				</span>
+				<form name="memberForm" class="login100-form validate-form p-b-33 p-t-5" role="form" method="POST" action="/AddMember" th:object="${userForm}">
+
+					<div class="wrap-input100 validate-input" data-validate = "Enter ID">
+						<input class="input100" type="text" name="id" placeholder="ID">
+						<span class="focus-input100" data-placeholder="&#xe82a;"></span>
+					</div>
+					<div class="wrap-input100 validate-input" data-validate="Enter password">
+						<input class="input100" type="password" name="password" placeholder="Password">
+						<span class="focus-input100" data-placeholder="&#xe80f;"></span>
+					</div>
+					<div class="wrap-input100 validate-input" data-validate="Enter password">
+						<input class="input100" type="password" name="passwordConfirm" placeholder="Repeat PW">
+						<span class="focus-input100" data-placeholder="&#xe80f;"></span>
+					</div>
+
+					<div class="container-login100-form-btn m-t-32">
+						<button class="login100-form-btn">
+							<a href = "#" onclick="openChild()">Search My identity</a>
+						</button>
+					</div>
+
+					<div class="wrap-input100 validate-input" data-validate = "Enter Name">
+						<input class="input100" id = "name" type="text" name="name" placeholder="Name" disabled="disabled">
+						<span class="focus-input100" data-placeholder="&#xe82a;"></span>
+					</div>
+
+
+					<div class="wrap-input100 validate-input" data-validate = "Enter Major">
+						<input class="input100" id ="major" type="text" name="Major" placeholder="Major" disabled="disabled">
+						<span class="focus-input100" data-placeholder="&#xe828;"></span>
+					</div>
+					<input type="hidden" name="usercode" id="usercode">
+
+					<!--
+					<div class="wrap-input100 validate-input" data-validate = "Enter E-mail">
+						<input class="input100" type="text" name="E-mail" placeholder="E-mail">
+						<span class="focus-input100" data-placeholder="&#xe6fe;"></span>
+					</div>
+					<div class="wrap-input100 validate-input" data-validate = "Enter Phone">
+						<input class="input100" type="text" name="Phone" placeholder="Phone">
+						<span class="focus-input100" data-placeholder="&#xe680;"></span>
+					</div>
+					<div class="wrap-input100 validate-input" data-validate = "Enter Employment Year">
+						<input class="input100" type="number" name="Employment Year" placeholder="Employment Year">
+						<span class="focus-input100" data-placeholder="&#xe91b;"></span>
+					</div>
+
+					-->
+					<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+					<div class="container-login100-form-btn m-t-32">
+						<button class="login100-form-btn" type="submit">
+							<a href = "javascript:submit()">Join</a>
+						</button>
+					</div>
+
+				</form>
+			</div>
+		</div>
+	</div>
+	
+
+	<div id="dropDownSelect1"></div>
+	
+<!--===============================================================================================-->
+	<script src="/vendor/jquery/jquery-3.2.1.min.js"></script>
+<!--===============================================================================================-->
+	<script src="/vendor/animsition/js/animsition.min.js"></script>
+<!--===============================================================================================-->
+	<script src="/vendor/bootstrap/js/popper.js"></script>
+	<script src="/vendor/bootstrap/js/bootstrap.min.js"></script>
+<!--===============================================================================================-->
+	<script src="/vendor/select2/select2.min.js"></script>
+<!--===============================================================================================-->
+	<script src="/vendor/daterangepicker/moment.min.js"></script>
+	<script src="/vendor/daterangepicker/daterangepicker.js"></script>
+<!--===============================================================================================-->
+	<script src="/vendor/countdowntime/countdowntime.js"></script>
+<!--===============================================================================================-->
+	<script src="/js/main.js"></script>
+	<script>
+		var openWin;
+
+		function openChild()
+		{
+			// window.name = "부모창 이름";
+			window.name = "parentForm";
+			// window.open("open할 window", "자식창 이름", "팝업창 옵션");
+			openWin = window.open("./lecturerlist",
+					"childForm", "width=570, height=350, resizable = no, scrollbars = no");
+		}
+
+	</script>
+	<script>
+
+		var isEmpty = function(value){ if( value == "" || value == null || value == undefined || ( value != null && typeof value == "object" && !Object.keys(value).length ) ){ return true; }else{ return false; }}
+
+		function submit(){
+			if(isEmpty($("#usercode").val()) || isEmpty($("#id").val()) || isEmpty($("#password").val()) || isEmpty($("#passwordConfirm").val())){
+				alert("입력받지 않은 값이 존재합니다. 값을 입력하십시오.");
+				return false;
+			}
+			else{
+				document.memberForm.form.submit();
+			}
+		}
+
+
+	</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<mapper namespace="com.sejong.project.capstone.mapper.ManageMapper">
+    <select id="getLectureInfo" resultType="hashmap">
+        SELECT a.id, b.majorname, a.lecturename, a.credit, a.course FROM lecture_1 a, major b
+        where a.majorcode = b.id
+    </select>
+    <select id="getBuildingInfo" resultType="hashmap">
+        select * from building
+    </select>
+    <select id="getClassInfo" parameterType="int" resultType="hashmap">
+        select * from classroom where buildingcode = #{buildingCode}
+    </select>
+    <select id="getClassInfoAll" resultType="hashmap">
+        select * from classroom
+    </select>
+
+    <delete id="deleteLecturer" parameterType="int">
+        DELETE FROM lecturer where id = #{id}
+    </delete>
+    <select id="getBuildingName" parameterType="int" resultType="string">
+    SELECT name FROM building where id = #{buildingId}
+    </select>
+    <select id="getClassListById" parameterType="int" resultType="hashmap">
+    SELECT * from classroom where buildingcode = #{buildingCode}
+    </select>
+    <select id="getAllLecturer" resultType="hashmap">
+    SELECT a.id, b.majorname, a.name, a.email, a.number, a.atime FROM lecturer a, major b where b.id = a.majorcode
+    </select>
+    <select id="getNullLecturer" resultType="hashmap">
+    SELECT a.id, b.majorname, a.name, a.email, a.number, a.atime FROM lecturer a, major b where b.id = a.majorcode and a.uid is null
+    </select>
+    <select id="getTableLastId"  resultType="int">
+    select id from lecturer order by id desc limit 1
+    </select>
+
+    <select id="getMajorCode"  parameterType="string" resultType="string">
+    select id from major where majorname = #{majorName}
+    </select>
+
+    <select id="getWaitCount" resultType="int">
+        select count(*) from request_1
+        where status ="배정대기"
+     </select>
+
+    <select id="getCompleteCount" resultType="int">
+        select count(*) from request_1
+        where status ="배정완료"
+     </select>
+
+    <select id="getFailCount" resultType="int">
+        select count(*) from request_1
+        where status ="배정실패"
+     </select>
+    <select id="getResultAll" resultType="hashmap">
+    select * from result_1
+    </select>
+
+    <update id="modifyLecturer" parameterType="com.sejong.project.capstone.domain.Lecturer">
+        UPDATE lecturer SET majorcode = #{majorcode}, name = #{name}, email = #{email}, number = #{number}, atime = #{atime}
+        WHERE id = #{id}
+    </update>
+
+    <insert id="insertLecturer" parameterType="com.sejong.project.capstone.domain.Lecturer" >
+       INSERT INTO lecturer values(#{id}, #{majorcode}, #{name}, #{email}, #{number}, #{atime})
+    <!-- auto-increment 사용시 _id 제거 -->
+    </insert>
+
+
+    <select id="getBuildingTableLastId"  resultType="int">
+    select id from building order by id desc limit 1
+    </select>
+    <insert id="insertBuilding" parameterType="com.sejong.project.capstone.domain.Building" >
+        INSERT INTO building values(#{id}, #{name})
+        <!-- auto-increment 사용시 _id 제거 -->
+    </insert>
+    <delete id="deleteBuilding" parameterType="int">
+        delete from building where id = #{id}
+    </delete>
+
+    <select id="getClassroomTableLastId"  resultType="int">
+    select id from classroom order by id desc limit 1
+    </select>
+
+    <insert id="insertClassroom" parameterType="com.sejong.project.capstone.domain.Classroom" >
+        INSERT INTO classroom values(#{id}, #{classroom}, #{buildingcode}, #{major}, #{classtype}, #{use} )
+        <!-- auto-increment 사용시 _id 제거 -->
+    </insert>
+    <delete id="deleteClassroom" parameterType="int">
+        delete from classroom where id = #{id}
+    </delete>
+
+
+    <select id="getLectureTableLastId"  resultType="int">
+    select id from lecture_1 order by id desc limit 1
+    </select>
+    <insert id="insertLecture" parameterType="com.sejong.project.capstone.domain.Lecture" >
+        INSERT INTO lecture_1 values(#{id}, #{majorcode}, #{lecturename}, #{credit}, #{course})
+        <!-- auto-increment 사용시 _id 제거 -->
+    </insert>
+    <delete id="deleteLecture" parameterType="int">
+        delete from lecture_1 where id = #{id}
+    </delete>
+    <update id="modifyLecture" parameterType="com.sejong.project.capstone.domain.Lecture">
+          UPDATE lecture_1 SET majorcode = #{majorcode}, lecturename = #{lecturename}, credit = #{credit}, course = #{course}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

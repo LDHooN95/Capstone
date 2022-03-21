@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sejong.project.capstone.mapper.MemberMapper">
+
+    <select id="readAccount" parameterType="string" resultType="com.sejong.project.capstone.domain.Member">
+        SELECT * FROM Member WHERE id = #{id}
+    </select>
+    <select id="readAutorities" parameterType="string" resultType="string">
+        SELECT authority_name FROM Authority WHERE username = #{username}
+    </select>
+    <insert id="insertUser" parameterType="com.sejong.project.capstone.domain.Member">
+        INSERT INTO Member VALUES(#{id},#{password},#{isAccountNonExpired},#{isAccountNonLocked},#{isCredentialsNonExpired},#{isEnabled})
+    </insert>
+    <insert id="insertUserAutority" parameterType="com.sejong.project.capstone.domain.Auth">
+        INSERT INTO Authority VALUES(#{id}, #{autority})
+    </insert>
+    <select id="readAllUsers" resultType="hashmap">
+        SELECT * FROM Member
+    </select>
+    <update id="rollbackWaitStatus">
+        update request_1 SET status = '배정대기'
+    </update>
+    <update id="updateUID" parameterType="com.sejong.project.capstone.domain.Member">
+        update lecturer SET uid = #{id}
+        where id = #{usercode}
+    </update>
+
+</mapper>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml", xmlns:th="http://www.thymeleaf.org">
+<head>
+  <style>
+* {box-sizing: border-box;}
+
+/* Navbar */
+
+</style>
+
+<title>Sejong Apply</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link href="/css/layout.css" rel="stylesheet" type="text/css" media="all">
+</head>
+
+<!-- ##############  body 시작  ################################################################################## -->
+<body id="top" >
+
+
+<div class="wrapper row2 bgded" style="position:relative; background-image:url('/images/backgrounds/1-4.jpg');">
+
+<!-- ################################################################################################ -->
+  <div class="overlay" style = "position:absolute;">
+    <section id="pageintro" class="clear"> 
+<!-- ################################################################################################ -->
+      <div class="center btmspace-80">
+        <br></br>
+        <br></br>
+        <br></br>
+        
+        
+        <center><h2 class="heading xxl uppercase btmspace-30" style = "font-size:100px;">SEJONG Apply</h2></center>
+          <p class="xl nospace capitalise"></p>
+        
+        <div align="center">          
+        <p>Date/Time: <span id="datetime"></span></p>
+
+            <script>
+            var dt = new Date();
+            document.getElementById("datetime").innerHTML = (dt.getFullYear()) +"."+ (("0"+(dt.getMonth()+1)).slice(-2)) +"."+ (("0"+dt.getDate()).slice(-2)) +" "+ (("0"+dt.getHours()).slice(-2)) +":"+ (("0"+dt.getMinutes()).slice(-2));
+            </script>
+        </div>
+       
+        <div id = "omg" style = "width:70em;">
+        <ul class="nospace group services" style = "line-height:20px;">
+          
+          
+        <br>
+          <li class="one_third">
+            <article class="overlay1"><i class="fa fa-user"></i></a>
+              <a th:href = "@{/login}"><h6 class="heading" style = "font-size:25px; color: #fecb16;">로그인</h6></a>
+              </article>
+          </li>
+
+          <li class="one_third">
+            <article class="overlay1"><i class="fa fa-user-plus"></i></a>
+              <a href = "./AddMember"><h6 class="heading" style = "font-size:25px; color: #fecb16;">회원가입</h6></a>
+              </article>
+          </li>
+        </ul>
+      </div>
+      </div>
+    </section>
+    <br></br>
+  </div>
+</div>
+<!-- ################################################################################################ -->
+
+</body>
+</html>

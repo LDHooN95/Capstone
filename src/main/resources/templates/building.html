@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+
+>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta id="_csrf" name="_csrf" th:content="${_csrf.token}"/>
+    <!-- default header name is X-CSRF-TOKEN -->
+    <meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>세종대학교 강의실 배정 시스템</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/js/materialize/css/materialize.min.css}" media="screen,projection" />
+    <!-- Bootstrap Styles-->
+    <link th:href="@{/css/bootstrap.css}" rel="stylesheet" />
+    <!-- FontAwesome Styles-->
+    <link th:href="@{/css/font-awesome.css}" rel="stylesheet" />
+    <!-- Morris Chart Styles-->
+    <link th:href="@{/js/morris/morris-0.4.3.min.css}" rel="stylesheet" />
+    <!-- dataTables -->
+    <link th:href="@{/js/dataTables/dataTables.bootstrap.css}" rel="stylesheet" />
+    <!-- Custom Styles-->
+    <link th:href="@{/css/custom-styles.css}" rel="stylesheet" />
+    <!-- Google Fonts-->
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
+    <link rel="stylesheet" th:href="@{/js/Lightweight-Chart/cssCharts.css}">
+    <style>
+        #insertBuildingLayer, #deleteBuildingLayer{display:none;}
+    </style>
+</head>
+<body>
+
+<div id="wrapper">
+
+    <!-- NAVI TOP : 위쪽 메뉴바 -->
+    <nav class="navbar navbar-default top-navbar" role="navigation">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand waves-effect waves-dark" href="./index" valign="top"><!--<img th:src="@{/images/sejong_trans_logo.png}" width="25" height="25" alt="">-->SEJONG APPLY</a>
+
+            <div id="sideNav" href=""><i class="material-icons dp48">toc</i></div>
+        </div>
+
+        <ul class="nav navbar-top-links navbar-right">
+            <li><a class="dropdown-button waves-effect waves-dark" href="#!" data-activates="dropdown1"><i class="fa fa-user fa-fw"></i> <b><span sec:authentication="name"></span></b> <i class="material-icons right">arrow_drop_down</i></a></li>
+        </ul>
+
+
+
+
+        <!-- 메뉴에 붙어있는 Dropdown Structure. 로그인시에만 떠야겠죠. -->
+        <ul id="dropdown1" class="dropdown-content">
+            <li><a th:href="@{/logout}"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+            </li>
+        </ul>
+
+    </nav>
+    <!--/. NAV TOP  -->
+
+
+    <!-- NAV SIDE : 왼쪽 메뉴 부분 -->
+    <nav class="navbar-default navbar-side" role="navigation">
+        <div class="sidebar-collapse">
+            <ul class="nav" id="main-menu">
+
+                <li>
+                    <a href="./index" class="waves-effect waves-dark"><i class="fa fa-dashboard"></i> 대시보드</a>
+                </li>
+                <li>
+                    <a href="#" class="waves-effect waves-dark"><i class="fa fa-sitemap"></i> 강의실 배정 <span class="fa arrow"></span></a>
+                    <ul class="nav nav-second-level">
+                        <li>
+                            <a href="./request" class="waves-effect waves-dark">강의실 배정 신청</a>
+                        </li>
+                        <li>
+                            <a href="./basket" class="waves-effect waves-dark">신청 내역 조회</a>
+                        </li>
+
+                    </ul>
+                </li>
+
+                <li sec:authorize="hasAnyRole('ROLE_WORKER','ROLE_ADMIN')">
+                    <a href="#" class="active-menu waves-effect waves-dark"><i class="fa fa-sitemap"></i> 정보 관리 <span class="fa arrow"></span></a>
+                    <ul class="nav nav-second-level">
+                        <li sec:authorize="hasRole('ROLE_ADMIN')">
+                            <a href="./building" class="active-menu waves-effect waves-dark">건물 정보 관리</a>
+                        </li>
+                        <li sec:authorize="hasAnyRole('ROLE_WORKER','ROLE_ADMIN')">
+                            <a href="./lecturer" class="waves-effect waves-dark">교수 정보 관리</a>
+                        </li>
+                        <li sec:authorize="hasAnyRole('ROLE_WORKER','ROLE_ADMIN')">
+                            <a href="./lectureinfo" class="waves-effect waves-dark">강의 정보 관리</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a href="./result" class="waves-effect waves-dark"><i class="fa fa-bar-chart-o"></i> 배정 결과 조회 </a>
+                </li>
+
+                <li sec:authorize="hasRole('ROLE_ADMIN')">
+                    <!-- <a href="./arrange" class="waves-effect waves-dark"><i class="fa fa-qrcode"></i> 강의실 배정 </a> -->
+                </li>
+
+
+
+            </ul>
+
+        </div>
+
+    </nav>
+    <!-- /. NAV SIDE 끝 -->
+
+
+    <!-- PAGE WRAPPER : NAV 제외한 페이지 -->
+    <div id="page-wrapper" >
+        <!-- page Header : 페이지 머릿글 -->
+        <div class="header">
+            <!-- 페이지 제목 -->
+            <h1 class="page-header">
+                건물 정보 관리
+            </h1>
+            <!-- breadcrumb -->
+            <ol class="breadcrumb">
+                <li><a href="./index">대시보드</a></li>
+                <li>정보 관리</li>
+                <li class="active">건물 정보 관리</li>
+            </ol>
+        </div>
+        <!-- PAGE INNER : 페이지 본문 -->
+        <div id="page-inner">
+
+            <!-- 첫번째 행 : lecturer 리스트 출력 -->
+            <div class="row">
+                <!-- -->
+                <div class="col-md-6">
+                    <!-- Advanced Tables -->
+                    <div class="card">
+                        <div class="card-action">건물 목록 <div class="right-align">
+                            <a id ="insertButton1" class="waves-effect waves-light btn">추가</a>
+                           <!-- <a id ="changeButton1" class="waves-effect waves-light btn">변경</a>
+                            --></div></div>
+                        <div class="card-content">
+                            <div class="table-responsive">
+                                <table class="table table-striped" id="buildingList">
+                                    <thead >
+                                    <!-- List Title part -->
+                                    <tr >
+                                        <!-- a.usercode, b.majorname, a.name, a.email, a.number, a.atime -->
+                                        <th>코드</th>
+                                        <th>건물명</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+                    <!--End Advanced Tables -->
+                </div>
+                <div class="col-md-6">
+                    <!-- Advanced Tables -->
+                    <div class="card">
+                        <div class="card-action">강의실 목록 <div class="right-align"><a id ="insertButton2" class="waves-effect waves-light btn">추가</a></div></div>
+                        <div class="card-content">
+                            <div class="table-responsive">
+                                <table class="table table-striped" id="classList">
+                                    <thead >
+                                    <!-- List Title part -->
+                                    <tr >
+                                        <!-- id, class, buildingcode, major, classtype, use -->
+                                        <th >순번</th>
+                                        <th >강의실명</th>
+                                        <th >건물코드</th>
+                                        <th >사용학과</th>
+                                        <th >강의실분류</th>
+                                        <th >세부분류</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+                    <!--End Advanced Tables -->
+                </div>
+            </div>
+
+            <!-- /. ROW -->
+
+            <!-- 두번째 행 : 건물목록 추가 (insertbutton1) 및 수정,삭제 구현  (미구현)-->
+
+
+            <div id="insertBuildingLayer" class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-action">
+                            건물 추가
+                        </div>
+                        <div class="card-content">
+                            <form class="col s12">
+                                <div class="row">
+                                    <div class="input-field col s6">
+                                        <input id="building_name_insert" type="text" class="validate">
+                                        <label for="building_name_insert">건물명</label>
+                                    </div>
+                                </div>
+
+                            </form>
+                            <div class="row right-align">
+                                <a id ="building_insertButton" class="waves-effect waves-light btn">추가</a>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="deleteBuildingLayer" class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-action" id="deleteLayer_caption">
+                        </div>
+                        <div class="card-content">
+                            <div class="row right-align">
+                                <input type ="hidden" id="building_id">
+                                <a id ="building_deleteButton" class="waves-effect waves-light btn">삭제</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 두번째 행 : 강의실 (insertbutton1) 및 수정,삭제 구현  (미구현)-->
+            <div id="deleteClassroomLayer" class="row" style="display:none">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-action">
+                            강의실 삭제
+                        </div>
+                        <div class="card-content">
+                            <form class="col s12">
+                                <div class="row">
+                                    <div class="input-field col s6">
+                                        <input type="hidden" id="classid">
+                                        <input id="class_name" type="text" class="validate" readonly>
+
+                                    </div>
+                                    <div class="input-field col s6">
+                                        <input id="user_major" type="text" class="validate" readonly>
+
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="input-field col s6">
+                                        <input id="classification" type="text" class="validate" readonly>
+
+                                    </div>
+                                    <div class="input-field col s6">
+                                        <input id="detail" type="text" class="validate" readonly>
+
+                                    </div>
+                                </div>
+                            </form>
+                            <div class="row right-align">
+                               <!-- <a id ="modifyButton1" class="waves-effect waves-yellow btn">수정</a> -->
+                                <a id ="classroom_deleteButton" class="waves-effect waves-red btn">삭제</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /. ROW  -->
+
+            <div id="insertClassroomLayer" class="row" style="display:none">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-action">
+                            강의실 추가
+                        </div>
+                        <div class="card-content">
+                            <form class="col s12">
+                                <div class="row">
+
+                                    <div class="input-field col s6">
+                                        <input id="class_name_insert" type="text" class="validate">
+                                        <label for="class_name_insert">강의실명</label>
+                                    </div>
+                                    <div class="input-field col s6">
+                                        <input id="user_major_insert" type="text" class="validate">
+                                        <label for="user_major_insert">사용학과</label>
+                                    </div>
+                                </div>
+                                <div class="row">
+
+                                    <div class="input-field col s6">
+                                        <input id="classification_insert" type="text" class="validate">
+                                        <label for="classification_insert">강의실분류</label>
+                                    </div>
+                                    <div class="input-field col s6">
+                                        <input id="detail_insert" type="text" class="validate">
+                                        <label for="detail_insert">세부분류</label>
+                                    </div>
+                                </div>
+
+                            </form>
+                            <div class="row right-align">
+                                <a id ="classroom_insertButton" class="waves-effect waves-light btn">추가</a>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- footer에는 깨알같은 저작권 비스무리한 내용 출력하자 -->
+            <footer><p> COPYRIGHTⓒ 2019 by SEJONG UNIVERSITY CAPSTONE DESIGN TEAM 7. ALL RIGHTS RESERVED.</p></footer>
+        </div>
+        <!-- /. PAGE INNER 끝  -->
+    </div>
+    <!-- /. PAGE WRAPPER 끝 -->
+
+
+
+</div>
+<!-- /. WRAPPER 끝  -->
+<!-- JS Scripts PART -->
+<!-- jQuery Js -->
+<script th:src="@{/js/jquery-1.10.2.js}"></script>
+<!-- Bootstrap Js -->
+<script th:src="@{/js/bootstrap.min.js}"></script>
+
+<script th:src="@{/js/materialize/js/materialize.min.js}"></script>
+
+
+<!-- Custom Js -->
+<script th:src="@{/js/custom-scripts.js}"></script>
+
+<!-- Metis Menu Js -->
+<script th:src="@{/js/jquery.metisMenu.js}"></script>
+<!-- Morris Chart Js -->
+<script th:src="@{/js/morris/raphael-2.1.0.min.js}"></script>
+<script th:src="@{/js/morris/morris.js}"></script>
+
+
+<script th:src="@{/js/easypiechart.js}"></script>
+<script th:src="@{/js/easypiechart-data.js}"></script>
+
+<script th:src="@{/js/Lightweight-Chart/jquery.chart.js}"></script>
+<!-- DATA TABLE SCRIPTS : 매우 간단하게 Table UI 작업해줌 -->
+<script th:src="@{/js/dataTables/jquery.dataTables.js}"></script>
+<script th:src="@{/js/dataTables/dataTables.bootstrap.js}"></script>
+
+<script>
+    $(document).on("click", "#insertButton1", function(){
+
+        $("#insertClassroomLayer").css("display", "none");
+        $("#insertBuildingLayer").css("display", "block");
+        $("#deleteBuildingLayer").css("display", "none");
+        $("#deleteClassroomLayer").css("display", "none");
+
+    });
+
+    $(document).on("click", "#insertButton2", function(){
+
+        $("#insertClassroomLayer").css("display", "block");
+        $("#insertBuildingLayer").css("display", "none");
+        $("#deleteBuildingLayer").css("display", "none");
+        $("#deleteClassroomLayer").css("display", "none");
+    });
+
+ /*
+    $(document).on("click", "#changeButton1", function(){
+
+        $("#modifyLayer").css("display", "block");
+        $("#insertLayer").css("display", "none");
+        $("#insertLayer1").css("display", "none");
+        $("#modifyLayer1").css("display", "none");
+        var tr = $(this);
+        var td = tr.children();
+        $('input#usercode').val(td.eq(0).text());
+        $( 'input#majorname' ).val(td.eq(1).text());
+        $( 'input#name' ).val(td.eq(2).text());
+        $( 'input#email' ).val(td.eq(3).text());
+        $( 'input#phone' ).val(td.eq(4).text());
+        $( 'input#atime' ).val(td.eq(5).text());
+    });
+    */
+
+    $(document).on("click", "#classList tbody tr", function(){
+
+        $("#deleteBuildingLayer").css("display", "none");
+        $("#insertBuildingLayer").css("display", "none");
+        $("#insertClassroomLayer").css("display", "none");
+        $("#deleteClassroomLayer").css("display", "block");
+        var tr = $(this);
+        var td = tr.children();
+
+
+        $('#classid').val(td.eq(0).text());
+        $( '#class_name' ).val(td.eq(1).text());
+        $( '#user_major' ).val(td.eq(2).text());
+        $( '#classification' ).val(td.eq(3).text());
+        $( '#detail' ).val(td.eq(4).text());
+
+    });
+
+</script>
+
+
+
+<script type="text/javascript">
+
+    $.ajax({
+        type: 'GET',
+        url: '/api/buildings',
+        success: function (data) {
+            $('#buildingList').dataTable({
+                data: data,
+                info: false,
+                columns: [
+                    {data: "id"},
+                    {data: "name"}
+                ]
+            });
+        }
+    });
+
+    $.ajax({
+        type: 'GET',
+        url: '/api/buildings/101',
+        success: function (data) {
+            if ($.fn.DataTable.isDataTable('#classList')) {
+                $('#classList').DataTable().clear();
+                $('#classList').DataTable().destroy();
+            }
+
+            $('#classList').dataTable({
+                data: data,
+                info: false,
+                columns: [
+                    {data: "id"},
+                    {data: "classroom"},
+                    {data: "buildingcode"},
+                    {data: "major"},
+                    {data: "classtype"},
+                    {data: "use"}],
+                columnDefs: [
+                    {
+                        "targets": [2],
+                        "visible": false,
+                        "searchable": false
+                    }
+                ]
+            });
+        }});
+
+    /*
+
+*/
+</script>
+<script>
+
+    $(document).on("click", "#buildingList tbody tr", function() {
+
+        var target = $(this).children().eq(0).text();
+        $('#building_id').val(target);
+
+        $("#deleteBuildingLayer").css("display", "block");
+        $("#insertBuildingLayer").css("display", "none");
+        $("#insertClassroomLayer").css("display", "none");
+        $("#deleteClassroomLayer").css("display", "none");
+        $('#deleteLayer_caption').text("선택되어 있는 건물은 \'"+$(this).children().eq(1).text()+"\' 입니다. 삭제하시려면 삭제버튼을 눌러주세요.")
+
+        $.ajax({
+            type: 'GET',
+            url: '/api/buildings/' + target,
+            success: function (data) {
+                if ($.fn.DataTable.isDataTable('#classList')){
+                    $('#classList').DataTable().clear();
+                    $('#classList').DataTable().destroy();
+                }
+
+                $('#classList').dataTable({
+                    data: data,
+                    info: false,
+                    columns: [
+                        {data: "id"},
+                        {data: "classroom"},
+                        {data: "buildingcode"},
+                        {data: "major"},
+                        {data: "classtype"},
+                        {data: "use"}],
+                    columnDefs: [
+                        {
+                            "targets": [ 2 ],
+                            "visible": false,
+                            "searchable": false
+                        }
+                    ]
+                });
+
+            }
+        });
+    });
+
+
+
+</script>
+
+<script>
+    $(document).on("click", "#building_insertButton", function () {
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+        var jsonData = JSON.stringify({
+            name: $('#building_name_insert').val()
+        });
+
+        $.ajax({
+            url: "/api/buildings",
+            type: "POST",
+            data: jsonData,
+            contentType: "application/json",
+            beforeSend : function(xhr)
+            {   /*데이터를 전송하기 전에 헤더에 csrf값을 설정한다*/
+                xhr.setRequestHeader(header, token);
+            },
+
+            success: function () {
+                alert('건물 추가가 정상적으로 완료되었습니다.');
+                location.href = '/building';
+            },
+            error: function () {
+                alert('데이터를 저장하는 도중 에러가 발생했습니다. 다시 시도 해주세요.');
+            }
+        });
+    });
+</script>
+<script>
+    $(document).on("click", "#classroom_insertButton", function () {
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+
+        var jsonData = JSON.stringify({
+            classroom: $('#class_name_insert').val(),
+            buildingcode: $('#building_id').val(),
+            major: $('#user_major_insert').val(),
+            classtype: $('#classification_insert').val(),
+            use: $('#detail_insert').val()
+
+        });
+
+        $.ajax({
+            url: "/api/buildings/classroom",
+            type: "POST",
+            data: jsonData,
+            contentType: "application/json",
+            beforeSend : function(xhr)
+            {   /*데이터를 전송하기 전에 헤더에 csrf값을 설정한다*/
+                xhr.setRequestHeader(header, token);
+            },
+
+            success: function () {
+                alert('강의실 추가가 정상적으로 완료되었습니다.');
+                location.href = '/building';
+            },
+            error: function () {
+                alert('데이터를 저장하는 도중 에러가 발생했습니다. 다시 시도 해주세요.');
+            }
+        });
+
+    });
+</script>
+
+<script>
+    $('#building_deleteButton').click(function(){
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+       // alert($('#building_id').val());
+        $.ajax({
+            url: "/api/buildings/"+ $('#building_id').val(),
+            type: "DELETE",
+            beforeSend : function(xhr)
+            {   /*데이터를 전송하기 전에 헤더에 csrf값을 설정한다*/
+                xhr.setRequestHeader(header, token);
+            },
+
+            success: function(){
+                alert("삭제 완료되었습니다. ");
+                location.href="/building"
+            },
+            error: function () {
+                alert("삭제하는 도중 에러가 발생했습니다. 다시 시도 해주세요.")
+            }
+
+        });
+
+    });
+
+
+</script>
+
+<script>
+    $('#classroom_deleteButton').click(function(){
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+        alert($('#classid').val());
+        $.ajax({
+            url: "/api/buildings/classroom/"+ $('#classid').val(),
+            type: "DELETE",
+            beforeSend : function(xhr)
+            {   /*데이터를 전송하기 전에 헤더에 csrf값을 설정한다*/
+                xhr.setRequestHeader(header, token);
+            },
+
+            success: function(){
+                alert("삭제 완료되었습니다. ");
+                location.href="/building"
+            },
+            error: function () {
+                alert("삭제하는 도중 에러가 발생했습니다. 다시 시도 해주세요.")
+            }
+
+        });
+
+    });
+
+
+</script>
+</body>
+
+</html>

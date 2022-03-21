@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+
+>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta id="_csrf" name="_csrf" th:content="${_csrf.token}"/>
+    <!-- default header name is X-CSRF-TOKEN -->
+    <meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>세종대학교 강의실 배정 시스템</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/js/materialize/css/materialize.min.css}" media="screen,projection" />
+    <!-- Bootstrap Styles-->
+    <link th:href="@{/css/bootstrap.css}" rel="stylesheet" />
+    <!-- FontAwesome Styles-->
+    <link th:href="@{/css/font-awesome.css}" rel="stylesheet" />
+    <!-- Morris Chart Styles-->
+    <link th:href="@{/js/morris/morris-0.4.3.min.css}" rel="stylesheet" />
+
+
+    <!-- dataTables -->
+    <link th:href="@{/js/dataTables/dataTables.bootstrap.css}" rel="stylesheet" />
+    <!-- Custom Styles-->
+    <link th:href="@{/css/custom-styles.css}" rel="stylesheet" />
+    <!-- Google Fonts-->
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
+    <link rel="stylesheet" th:href="@{/js/Lightweight-Chart/cssCharts.css}">
+    <style>
+        #insertLayer{display:none;}
+    </style>
+</head>
+<body>
+
+<div id="wrapper">
+    <!-- NAVI TOP : 위쪽 메뉴바 -->
+    <nav class="navbar navbar-default top-navbar" role="navigation">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand waves-effect waves-dark" href="./index" valign="top"><!--<img th:src="@{/images/sejong_trans_logo.png}" width="25" height="25" alt="">-->SEJONG APPLY</a>
+
+            <div id="sideNav" href=""><i class="material-icons dp48">toc</i></div>
+        </div>
+
+        <ul class="nav navbar-top-links navbar-right">
+            <li><a class="dropdown-button waves-effect waves-dark" href="#!" data-activates="dropdown1"><i class="fa fa-user fa-fw"></i> <b><span id="name" sec:authentication="name"></span></b> <i class="material-icons right">arrow_drop_down</i></a></li>
+        </ul>
+
+
+
+
+        <!-- 메뉴에 붙어있는 Dropdown Structure. 로그인시에만 떠야겠죠. -->
+        <ul id="dropdown1" class="dropdown-content">
+            <li><a th:href="@{/logout}"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+            </li>
+        </ul>
+
+    </nav>
+    <!--/. NAV TOP  -->
+
+
+    <!-- NAV SIDE : 왼쪽 메뉴 부분 -->
+    <nav class="navbar-default navbar-side" role="navigation">
+        <div class="sidebar-collapse">
+            <ul class="nav" id="main-menu">
+
+                <li>
+                    <a href="./index" class="waves-effect waves-dark"><i class="fa fa-dashboard"></i> 대시보드</a>
+                </li>
+                <li>
+                    <a href="#" class="active-menu waves-effect waves-dark"><i class="fa fa-sitemap"></i> 강의실 배정 <span class="fa arrow"></span></a>
+                    <ul class="nav nav-second-level">
+                        <li>
+                            <a href="./request" class="active-menu waves-effect waves-dark">강의실 배정 신청</a>
+                        </li>
+                        <li>
+                            <a href="./basket" class="waves-effect waves-dark">신청 내역 조회</a>
+                        </li>
+
+                    </ul>
+                </li>
+
+                <li sec:authorize="hasAnyRole('ROLE_WORKER','ROLE_ADMIN')">
+                    <a href="#" class="waves-effect waves-dark"><i class="fa fa-sitemap"></i> 정보 관리 <span class="fa arrow"></span></a>
+                    <ul class="nav nav-second-level">
+                        <li sec:authorize="hasRole('ROLE_ADMIN')">
+                            <a href="./building" class="waves-effect waves-dark">건물 정보 관리</a>
+                        </li>
+                        <li sec:authorize="hasAnyRole('ROLE_WORKER','ROLE_ADMIN')">
+                            <a href="./lecturer" class="waves-effect waves-dark">교수 정보 관리</a>
+                        </li>
+                        <li sec:authorize="hasAnyRole('ROLE_WORKER','ROLE_ADMIN')">
+                            <a href="./lectureinfo" class="waves-effect waves-dark">강의 정보 관리</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a href="./result" class="waves-effect waves-dark"><i class="fa fa-bar-chart-o"></i> 배정 결과 조회 </a>
+                </li>
+
+                <li sec:authorize="hasRole('ROLE_ADMIN')">
+                    <!-- <a href="./arrange" class="waves-effect waves-dark"><i class="fa fa-qrcode"></i> 강의실 배정 </a> -->
+                </li>
+
+
+
+            </ul>
+
+        </div>
+
+    </nav>
+    <!-- /. NAV SIDE 끝 -->
+
+
+
+    <!-- PAGE WRAPPER : NAV 제외한 페이지 -->
+    <div id="page-wrapper" >
+        <!-- page Header : 페이지 머릿글 -->
+        <div class="header">
+            <!-- 페이지 제목 -->
+            <h1 class="page-header">
+                강의실 배정 신청
+            </h1>
+            <!-- breadcrumb -->
+            <ol class="breadcrumb">
+                <li><a href="./index">대시보드</a></li>
+                <li>정보 관리</li>
+                <li class="active">강의 정보 관리</li>
+            </ol>
+
+        </div>
+        <!-- PAGE INNER : 페이지 본문 -->
+        <div id="page-inner">
+
+            <!-- 첫번째 행 : lecturer 리스트 출력 -->
+            <div class="row">
+
+                <div class="col-md-12">
+
+                    <div class="card">
+                        <div class="card-action">전체 강의 목록에서 신청할 과목을 선택해주세요. <!--<a id ="insertButton1" class="waves-effect waves-light btn">강의실 신청하기</a></div>--></div>
+                        <div class="card-content">
+                            <div class="table-responsive">
+                                <table align = "center" class="table table-striped table-hover" id="dataTables-example">
+                                    <thead>
+
+                                    <tr>
+
+                                        <th>순번</th>
+                                        <th>학과/학부</th>
+                                        <th>강의명</th>
+                                        <th>학점</th>
+                                        <th>이수구분</th>
+
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!-- /. ROW  -->
+
+            <!-- 두번째 행 : 추가 담당 행 -->
+            <div class="row" id="insertLayer">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-action"> 선택한 과목의 강의실, 강의시간의 지망순위를 정해주세요. </div>
+                        <div class="card-action " id="caption"> </div>
+                        <div class="card-content">
+                            <br class="col s12">
+                            <div class="row">
+                                <div class="input-field col sm6">
+                                    <!-- 현재 선택된 강의는 무엇입니다를 표기하자. -->
+                                </div>
+
+
+                            </div>
+                            <!--
+                            <input type="button" id="add" value="지망추가" style="border-style: none; padding: 2px 10px; background-color: lightgray; border-radius: 0.5em; color: white;">
+                            <input type="button" id="delete" value="지망삭제" style="border-style: none; padding: 2px 10px; background-color: lightgray; border-radius: 0.5em; color: white;">
+
+                            -->
+                            <form>
+                                <div class="table-responsive">
+                                    <table id="T5" class="T5 text-center">
+                                        <thead>
+                                        <tr style = "vertical-align:middle; color:white; background-color:#284350; font-size:18px">
+                                            <th width="5%">지망</th>
+                                            <th width = "15%">교수</th>
+                                            <th width = "15%">강의실</th>
+                                            <th width = "15%">강의요일</th>
+                                            <th width = "20%">시작시간</th>
+                                            <th width = "20%">종료시간</th>
+                                        </tr>
+                                        </thead>
+
+                                        <tbody style = "text-align:center; vertical-align: middle;">
+
+                                        <!-- 1지망 -->
+                                        <tr style = "text-align:center; vertical-align: middle;">
+                                            <td>1지망</td> <!-- 지망 -->
+                                            <td rowspan = "3">
+                                                <input type="hidden" id="lecturercode" readonly>
+                                                <input type="text" id="lecturer_label" value ="클릭하여 교수 선택" class="input-field col s6" readonly> <!-- 1지망 강의실 -->
+                                            </td>
+                                            <td>
+                                                <div class="classroom1">
+                                                <input type="hidden" id="classroom1" readonly>
+                                                <input type="text" id="classroom1_label" value ="클릭하여 강의실 선택" class="input-field col s6" readonly> <!-- 1지망 강의실 -->
+                                                </div>
+                                            </td>
+
+                                            <td>
+
+                                                <select id="week1" name = "days" class = "form-control input-sm">
+                                                    <option>강의요일</option>
+                                                    <optgroup label="두번 수업">
+                                                        <option value = "월,화">월,화</option>
+                                                        <option value = "월,수">월,수</option>
+                                                        <option value = "월,목">월,목</option>
+                                                        <option value = "월,금">월,금</option>
+                                                        <option value = "화,수">화,수</option>
+                                                        <option value = "화,목">화,목</option>
+                                                        <option value = "화,금">화,금</option>
+                                                        <option value = "수,목">수,목</option>
+                                                        <option value = "수,금">수,금</option>
+                                                        <option value = "목,금">목,금</option>
+                                                    </optgroup>
+                                                    <optgroup label="한번 수업">
+                                                        <option value = "월">월</option>
+                                                        <option value = "화">화</option>
+                                                        <option value = "수">수</option>
+                                                        <option value = "목">목</option>
+                                                        <option value = "금">금</option>
+                                                    </optgroup>
+                                                </select> <!-- 요일 -->
+                                            </td>
+                                            <td>
+                                                <select id = "starttime1" name="starttime" class = "form-control input-sm">
+                                                    <optgroup label="오전">
+                                                        <option value = "08:00:00" >08:00</option>
+                                                        <option value = "08:30:00">08:30</option>
+                                                        <option value = "09:00:00">09:00</option>
+                                                        <option value = "09:30:00">09:30</option>
+                                                        <option value = "10:00:00">10:00</option>
+                                                        <option value = "10:30:00">10:30</option>
+                                                        <option value = "11:00:00">11:00</option>
+                                                        <option value = "11:30:00">11:30</option>
+                                                    </optgroup>
+
+                                                    <optgroup label="오후">
+                                                        <option value = "12:00:00">12:00</option>
+                                                        <option value = "12:30:00">12:30</option>
+                                                        <option value = "13:00:00">13:00</option>
+                                                        <option value = "13:30:00">13:30</option>
+                                                        <option value = "14:00:00">14:00</option>
+                                                        <option value = "14:30:00">14:30</option>
+                                                        <option value = "15:00:00">15:00</option>
+                                                        <option value = "15:30:00">15:30</option>
+                                                        <option value = "16:00:00">16:00</option>
+                                                        <option value = "16:30:00">16:30</option>
+                                                        <option value = "17:00:00">17:00</option>
+                                                        <option value = "17:30:00">17:30</option>
+                                                        <option value = "18:00:00">18:00</option>
+                                                        <option value = "18:30:00">18:30</option>
+                                                        <option value = "19:00:00">19:00</option>
+                                                        <option value = "19:30:00">19:30</option>
+                                                        <option value = "20:00:00">20:00</option>
+                                                        <option value = "20:30:00">20:30</option>
+                                                        <option value = "21:00:00">21:00</option>
+                                                        <option value = "21:30:00">21:30</option>
+                                                        <option value = "22:00:00">22:00</option>
+                                                    </optgroup>
+                                                </select> <!-- 시작시간 -->
+                                            </td>
+                                            <td>
+
+                                                <select id = "endtime1" name="endtime" class = "form-control input-sm" >
+                                                    <optgroup label="오전">
+                                                        <option value = "08:00:00" >08:00</option>
+                                                        <option value = "08:30:00">08:30</option>
+                                                        <option value = "09:00:00">09:00</option>
+                                                        <option value = "09:30:00">09:30</option>
+                                                        <option value = "10:00:00">10:00</option>
+                                                        <option value = "10:30:00">10:30</option>
+                                                        <option value = "11:00:00">11:00</option>
+                                                        <option value = "11:30:00">11:30</option>
+                                                    </optgroup>
+
+                                                    <optgroup label="오후">
+                                                        <option value = "12:00:00">12:00</option>
+                                                        <option value = "12:30:00">12:30</option>
+                                                        <option value = "13:00:00">13:00</option>
+                                                        <option value = "13:30:00">13:30</option>
+                                                        <option value = "14:00:00">14:00</option>
+                                                        <option value = "14:30:00">14:30</option>
+                                                        <option value = "15:00:00">15:00</option>
+                                                        <option value = "15:30:00">15:30</option>
+                                                        <option value = "16:00:00">16:00</option>
+                                                        <option value = "16:30:00">16:30</option>
+                                                        <option value = "17:00:00">17:00</option>
+                                                        <option value = "17:30:00">17:30</option>
+                                                        <option value = "18:00:00">18:00</option>
+                                                        <option value = "18:30:00">18:30</option>
+                                                        <option value = "19:00:00">19:00</option>
+                                                        <option value = "19:30:00">19:30</option>
+                                                        <option value = "20:00:00">20:00</option>
+                                                        <option value = "20:30:00">20:30</option>
+                                                        <option value = "21:00:00">21:00</option>
+                                                        <option value = "21:30:00">21:30</option>
+                                                        <option value = "22:00:00">22:00</option>
+                                                    </optgroup>
+                                                </select> <!-- 종료시간 -->
+                                            </td>
+                                        </tr>
+                                        <!-- 1지망 끝 -->
+
+                                        <!-- 2지망 -->
+                                        <tr style = "text-align:center; vertical-align: middle;">
+                                            <td>2지망</td> <!-- 지망 -->
+
+                                            <td>
+                                                <input type="hidden" id="classroom2" readonly>
+                                                <input type="text" id="classroom2_label" value ="클릭하여 강의실 선택" class="input-field col s6" readonly> <!-- 2지망 강의실 -->
+                                            </td>
+
+                                            <td>
+                                                <select id ="week2" name = "days" class = "form-control input-sm">
+                                                    <option>강의요일</option>
+                                                    <optgroup label="두번 수업">
+                                                        <option value = "월,화">월,화</option>
+                                                        <option value = "월,수">월,수</option>
+                                                        <option value = "월,목">월,목</option>
+                                                        <option value = "월,금">월,금</option>
+                                                        <option value = "화,수">화,수</option>
+                                                        <option value = "화,목">화,목</option>
+                                                        <option value = "화,금">화,금</option>
+                                                        <option value = "수,목">수,목</option>
+                                                        <option value = "수,금">수,금</option>
+                                                        <option value = "목,금">목,금</option>
+                                                    </optgroup>
+                                                    <optgroup label="한번 수업">
+                                                        <option value = "월">월</option>
+                                                        <option value = "화">화</option>
+                                                        <option value = "수">수</option>
+                                                        <option value = "목">목</option>
+                                                        <option value = "금">금</option>
+                                                    </optgroup>
+                                                </select> <!-- 요일 -->
+                                            </td>
+                                            <td>
+                                                <select id = "starttime2" name="starttime" class = "form-control input-sm">
+                                                    <optgroup label="오전">
+                                                        <option value = "08:00:00" >08:00</option>
+                                                        <option value = "08:30:00">08:30</option>
+                                                        <option value = "09:00:00">09:00</option>
+                                                        <option value = "09:30:00">09:30</option>
+                                                        <option value = "10:00:00">10:00</option>
+                                                        <option value = "10:30:00">10:30</option>
+                                                        <option value = "11:00:00">11:00</option>
+                                                        <option value = "11:30:00">11:30</option>
+                                                    </optgroup>
+
+                                                    <optgroup label="오후">
+                                                        <option value = "12:00:00">12:00</option>
+                                                        <option value = "12:30:00">12:30</option>
+                                                        <option value = "13:00:00">13:00</option>
+                                                        <option value = "13:30:00">13:30</option>
+                                                        <option value = "14:00:00">14:00</option>
+                                                        <option value = "14:30:00">14:30</option>
+                                                        <option value = "15:00:00">15:00</option>
+                                                        <option value = "15:30:00">15:30</option>
+                                                        <option value = "16:00:00">16:00</option>
+                                                        <option value = "16:30:00">16:30</option>
+                                                        <option value = "17:00:00">17:00</option>
+                                                        <option value = "17:30:00">17:30</option>
+                                                        <option value = "18:00:00">18:00</option>
+                                                        <option value = "18:30:00">18:30</option>
+                                                        <option value = "19:00:00">19:00</option>
+                                                        <option value = "19:30:00">19:30</option>
+                                                        <option value = "20:00:00">20:00</option>
+                                                        <option value = "20:30:00">20:30</option>
+                                                        <option value = "21:00:00">21:00</option>
+                                                        <option value = "21:30:00">21:30</option>
+                                                        <option value = "22:00:00">22:00</option>
+                                                    </optgroup>
+                                                </select> <!-- 시작시간 -->
+                                            </td>
+                                            <td>
+
+                                                <select id = "endtime2" name="endtime" class = "form-control input-sm">
+                                                    <optgroup label="오전">
+                                                        <option value = "08:00:00" >08:00</option>
+                                                        <option value = "08:30:00">08:30</option>
+                                                        <option value = "09:00:00">09:00</option>
+                                                        <option value = "09:30:00">09:30</option>
+                                                        <option value = "10:00:00">10:00</option>
+                                                        <option value = "10:30:00">10:30</option>
+                                                        <option value = "11:00:00">11:00</option>
+                                                        <option value = "11:30:00">11:30</option>
+                                                    </optgroup>
+
+                                                    <optgroup label="오후">
+                                                        <option value = "12:00:00">12:00</option>
+                                                        <option value = "12:30:00">12:30</option>
+                                                        <option value = "13:00:00">13:00</option>
+                                                        <option value = "13:30:00">13:30</option>
+                                                        <option value = "14:00:00">14:00</option>
+                                                        <option value = "14:30:00">14:30</option>
+                                                        <option value = "15:00:00">15:00</option>
+                                                        <option value = "15:30:00">15:30</option>
+                                                        <option value = "16:00:00">16:00</option>
+                                                        <option value = "16:30:00">16:30</option>
+                                                        <option value = "17:00:00">17:00</option>
+                                                        <option value = "17:30:00">17:30</option>
+                                                        <option value = "18:00:00">18:00</option>
+                                                        <option value = "18:30:00">18:30</option>
+                                                        <option value = "19:00:00">19:00</option>
+                                                        <option value = "19:30:00">19:30</option>
+                                                        <option value = "20:00:00">20:00</option>
+                                                        <option value = "20:30:00">20:30</option>
+                                                        <option value = "21:00:00">21:00</option>
+                                                        <option value = "21:30:00">21:30</option>
+                                                        <option value = "22:00:00">22:00</option>
+                                                    </optgroup>
+                                                </select> <!-- 종료시간 -->
+                                            </td>
+                                        </tr>
+                                        <!-- 2지망 끝-->
+
+                                        <!-- 3지망 -->
+                                        <tr style = "text-align:center; vertical-align: middle;">
+                                            <td>3지망</td> <!-- 지망 -->
+
+                                            <td>
+                                                <input type="hidden" id="classroom3" readonly>
+                                                <input type="text" id="classroom3_label" value ="클릭하여 강의실 선택" class="input-field col s6" > <!-- 3지망 강의실 -->
+                                            </td>
+
+                                            <td>
+                                                <select id="week3" name = "days" class = "form-control input-sm">
+                                                    <option>강의요일</option>
+                                                    <optgroup label="두번 수업">
+                                                        <option value = "월,화">월,화</option>
+                                                        <option value = "월,수">월,수</option>
+                                                        <option value = "월,목">월,목</option>
+                                                        <option value = "월,금">월,금</option>
+                                                        <option value = "화,수">화,수</option>
+                                                        <option value = "화,목">화,목</option>
+                                                        <option value = "화,금">화,금</option>
+                                                        <option value = "수,목">수,목</option>
+                                                        <option value = "수,금">수,금</option>
+                                                        <option value = "목,금">목,금</option>
+                                                    </optgroup>
+                                                    <optgroup label="한번 수업">
+                                                        <option value = "월">월</option>
+                                                        <option value = "화">화</option>
+                                                        <option value = "수">수</option>
+                                                        <option value = "목">목</option>
+                                                        <option value = "금">금</option>
+                                                    </optgroup>
+                                                </select> <!-- 요일 -->
+                                            </td>
+                                            <td>
+                                                <select id = "starttime3" name="starttime" class = "form-control input-sm">
+                                                    <optgroup label="오전">
+                                                        <option value = "08:00:00" >08:00</option>
+                                                        <option value = "08:30:00">08:30</option>
+                                                        <option value = "09:00:00">09:00</option>
+                                                        <option value = "09:30:00">09:30</option>
+                                                        <option value = "10:00:00">10:00</option>
+                                                        <option value = "10:30:00">10:30</option>
+                                                        <option value = "11:00:00">11:00</option>
+                                                        <option value = "11:30:00">11:30</option>
+                                                    </optgroup>
+
+                                                    <optgroup label="오후">
+                                                        <option value = "12:00:00">12:00</option>
+                                                        <option value = "12:30:00">12:30</option>
+                                                        <option value = "13:00:00">13:00</option>
+                                                        <option value = "13:30:00">13:30</option>
+                                                        <option value = "14:00:00">14:00</option>
+                                                        <option value = "14:30:00">14:30</option>
+                                                        <option value = "15:00:00">15:00</option>
+                                                        <option value = "15:30:00">15:30</option>
+                                                        <option value = "16:00:00">16:00</option>
+                                                        <option value = "16:30:00">16:30</option>
+                                                        <option value = "17:00:00">17:00</option>
+                                                        <option value = "17:30:00">17:30</option>
+                                                        <option value = "18:00:00">18:00</option>
+                                                        <option value = "18:30:00">18:30</option>
+                                                        <option value = "19:00:00">19:00</option>
+                                                        <option value = "19:30:00">19:30</option>
+                                                        <option value = "20:00:00">20:00</option>
+                                                        <option value = "20:30:00">20:30</option>
+                                                        <option value = "21:00:00">21:00</option>
+                                                        <option value = "21:30:00">21:30</option>
+                                                        <option value = "22:00:00">22:00</option>
+                                                    </optgroup>
+                                                </select> <!-- 시작시간 -->
+                                            </td>
+                                            <td>
+
+                                                <select id = "endtime3" name="endtime" class = "form-control input-sm">
+                                                    <optgroup label="오전">
+                                                        <option value = "08:00:00" >08:00</option>
+                                                        <option value = "08:30:00">08:30</option>
+                                                        <option value = "09:00:00">09:00</option>
+                                                        <option value = "09:30:00">09:30</option>
+                                                        <option value = "10:00:00">10:00</option>
+                                                        <option value = "10:30:00">10:30</option>
+                                                        <option value = "11:00:00">11:00</option>
+                                                        <option value = "11:30:00">11:30</option>
+                                                    </optgroup>
+
+                                                    <optgroup label="오후">
+                                                        <option value = "12:00:00">12:00</option>
+                                                        <option value = "12:30:00">12:30</option>
+                                                        <option value = "13:00:00">13:00</option>
+                                                        <option value = "13:30:00">13:30</option>
+                                                        <option value = "14:00:00">14:00</option>
+                                                        <option value = "14:30:00">14:30</option>
+                                                        <option value = "15:00:00">15:00</option>
+                                                        <option value = "15:30:00">15:30</option>
+                                                        <option value = "16:00:00">16:00</option>
+                                                        <option value = "16:30:00">16:30</option>
+                                                        <option value = "17:00:00">17:00</option>
+                                                        <option value = "17:30:00">17:30</option>
+                                                        <option value = "18:00:00">18:00</option>
+                                                        <option value = "18:30:00">18:30</option>
+                                                        <option value = "19:00:00">19:00</option>
+                                                        <option value = "19:30:00">19:30</option>
+                                                        <option value = "20:00:00">20:00</option>
+                                                        <option value = "20:30:00">20:30</option>
+                                                        <option value = "21:00:00">21:00</option>
+                                                        <option value = "21:30:00">21:30</option>
+                                                        <option value = "22:00:00">22:00</option>
+                                                    </optgroup>
+                                                </select> <!-- 종료시간 -->
+                                            </td>
+                                        </tr>
+                                        <!-- 3지망 끝 -->
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <input type="hidden" id="target_label">
+                                <input type="hidden" id="target">
+
+                                <div class="row right-align">
+                                    <a id ="insertButton" class="waves-effect waves-light btn">강의실 신청하기</a>
+                                </div>
+                                <input type="hidden" id="lecturecode">
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <!-- /. ROW  -->
+
+            <!-- footer에는 깨알같은 저작권 비스무리한 내용 출력하자 -->
+            <footer><p> COPYRIGHTⓒ 2019 by SEJONG UNIVERSITY CAPSTONE DESIGN TEAM 7. ALL RIGHTS RESERVED.</p></footer>
+        </div>
+        <!-- /. PAGE INNER 끝  -->
+
+
+    </div>
+    <!-- /. PAGE WRAPPER 끝 -->
+
+
+
+
+
+
+    </div>
+<!-- /. WRAPPER 끝  -->
+<!-- JS Scripts PART -->
+<!-- jQuery Js -->
+<script th:src="@{/js/jquery-1.10.2.js}"></script>
+<!-- Bootstrap Js -->
+<script th:src="@{/js/bootstrap.min.js}"></script>
+
+<script th:src="@{/js/materialize/js/materialize.min.js}"></script>
+
+<script th:src="@{/js/jquery.custom.js}"></script>
+<!-- Custom Js -->
+<script th:src="@{/js/custom-scripts.js}"></script>
+
+<!-- Metis Menu Js -->
+<script th:src="@{/js/jquery.metisMenu.js}"></script>
+<!-- Morris Chart Js -->
+<script th:src="@{/js/morris/raphael-2.1.0.min.js}"></script>
+<script th:src="@{/js/morris/morris.js}"></script>
+
+
+<script th:src="@{/js/easypiechart.js}"></script>
+<script th:src="@{/js/easypiechart-data.js}"></script>
+
+<script th:src="@{/js/Lightweight-Chart/jquery.chart.js}"></script>
+<!-- DATA TABLE SCRIPTS : 매우 간단하게 Table UI 작업해줌 -->
+<script th:src="@{/js/dataTables/jquery.dataTables.js}"></script>
+<script th:src="@{/js/dataTables/dataTables.bootstrap.js}"></script>
+
+
+<script type="text/javascript">
+    
+    function showfield(name){
+        if(name=='other')document.getElementById('tk').innerHTML='other: <input type="text" name="other" />';
+        else document.getElementById('tk').innerHTML='';
+    }
+
+</script>
+<script th:inline="javascript">
+    /* <![CDATA[ */
+    $.ajax({
+        type: 'GET',
+        url: '/api/lectures',
+        success: function (data) {
+            $('#dataTables-example').dataTable({
+                info: false,
+                data: data,
+                columns: [
+                    {data: "id"},
+                    {data: "majorname"},
+                    {data: "lecturename"},
+                    {data: "credit"},
+                    {data: "course"}
+                ]
+            });
+
+        }
+    });
+
+    /* ]]> */
+</script>
+<script sec:authorize="hasRole('ROLE_USER')">
+
+    $.ajax({
+        type: 'GET',
+        url: '/api/requests/'+$('#name').text(),
+        success: function (data) {
+            $.each(data, function(index, entry) {
+                $('#lecturercode').val(entry.id);
+                $('#lecturer_label').val(entry.name);
+            });
+        }
+    });
+</script>
+<script sec:authorize="hasAnyRole('ROLE_WORKER', 'ROLE_ADMIN')">
+    $(document).on("click","#lecturer_label",function(){
+        var hidden = $(this).parent().children().eq(0).attr("id");
+        var label = $(this).parent().children().eq(1).attr("id");
+        $("#target_label").val(label);
+        $("#target").val(hidden);
+
+        window.name = "parentForm";
+        // window.open("open할 window", "자식창 이름", "팝업창 옵션");
+
+        openWin = window.open("./selectlecturer",
+            "childForm", "width=570, height=350, resizable = no, scrollbars = no");
+
+    });
+
+</script>
+<script>
+    $.ajax({
+        type: 'GET',
+        url: '/api/requests/'+$('#name').text(),
+        success: function (data) {
+            $.each(data, function(index, entry) {
+                $('#lecturercode').val(entry.id);
+                $('#lecturer_label').val(entry.name);
+            });
+        }
+    });
+</script>
+<script>
+    /*
+    $(document).on("click", "#insertButton1", function(){
+
+        $("#modifyLayer").css("display", "none");
+        $("#insertLayer").css("display", "block");
+        $("#majorname_insert").focus();
+        return false;
+    });
+    */
+
+    $(document).on("click", "#dataTables-example tbody tr", function(){
+        $("#insertLayer").css("display", "block");
+        var tr = $(this);
+        var td = tr.children();
+        $('#lecturecode').val(td.eq(0).text());
+        $('#caption').text("현재 선택된 과목은 "+td.eq(1).text()+"의 \'"+td.eq(2).text()+"\' 입니다.")
+
+    });
+</script>
+<script>
+
+    var openWin;
+
+    $(document).on("click","#classroom1_label, #classroom2_label, #classroom3_label",function(){
+        var hidden = $(this).parent().children().eq(0).attr("id");
+        var label = $(this).parent().children().eq(1).attr("id");
+
+
+        $("#target_label").val(label);
+        $("#target").val(hidden);
+
+        window.name = "parentForm";
+        // window.open("open할 window", "자식창 이름", "팝업창 옵션");
+
+        openWin = window.open("./selectclass",
+            "childForm", "width=570, height=350, resizable = no, scrollbars = no");
+
+
+
+    });
+
+</script>
+
+<script>
+    var isEmpty = function(value){ if( value == "" || value == "강의요일" || value == null || value == undefined || ( value != null && typeof value == "object" && !Object.keys(value).length ) ){ return true; }else{ return false; }}
+
+    $(document).on("click", "#insertButton", function () {
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+        if(isEmpty($('#lecturecode').val()) || isEmpty($('#lecturercode').val()) || isEmpty($('#classroom1').val()) || isEmpty($('#week1').val()) || isEmpty($('#classroom2').val()) || isEmpty($('#week2').val()) || isEmpty($('#classroom3').val()) || isEmpty($('#week3').val())) {
+            alert("비어있는 값이 존재합니다. 값을 모두 넣어주세요.");
+            return false;
+        }
+        else
+        {
+        $.ajax({
+            url: "/api/requests",
+            type: "POST",
+            data: JSON.stringify({
+                lecturecode: $('#lecturecode').val(),
+                lecturercode: $('#lecturercode').val(),
+                seq: 1,
+                class1: $('#classroom1').val(),
+                week1: $('#week1').val(),
+                starttime1: $('#starttime1').val(),
+                endtime1: $('#endtime1').val(),
+                class2: $('#classroom2').val(),
+                week2: $('#week2').val(),
+                starttime2: $('#starttime2').val(),
+                endtime2: $('#endtime2').val(),
+                class3: $('#classroom3').val(),
+                week3: $('#week3').val(),
+                starttime3: $('#starttime3').val(),
+                endtime3: $('#endtime3').val()
+            }),
+            contentType: "application/json",
+            beforeSend : function(xhr)
+            {   /*데이터를 전송하기 전에 헤더에 csrf값을 설정한다*/
+                xhr.setRequestHeader(header, token);
+            },
+
+            success: function () {
+                alert('저장 성공!');
+                location.href = '/request';
+            },
+            error : function(request,status,error){
+                alert("code = "+ request.status + " message = " + request.responseText + " error = " + error); // 실패 시 처리
+                alert("저장하는 도중 오류가 발생했습니다. 다시 시도 해주세요.")
+            },
+
+
+
+        });
+        }
+    });
+
+</script>
+
+</body>
+
+</html>
